@@ -1,0 +1,5 @@
+Learned about the interview realted linux realtime sceanarios 
+top -used to check the cpu usage and memory usage and process id and uptime 
+du,df -disk realted commads
+ps 
+average load 

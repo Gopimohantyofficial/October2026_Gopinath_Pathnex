@@ -1,329 +1,125 @@
-Production Alert
-     ↓
-Is server alive?
-     ↓
-CPU / Memory / Disk?
-     ↓
-Process running?
-     ↓
-Port listening?
-     ↓
-Network/DNS working?
-     ↓
-Application logs?
-     ↓
-Permissions/files?
-     ↓
-Service/config issue?
+---
+- name: Install and start Nginx on Gopinath Server
+  hosts: all
+  become: yes
+
+  tasks:
+    - name: Install nginx
+      yum:
+        name: nginx
+        state: present
+
+    - name: Enable nginx
+      service:
+        name: nginx
+        state: started
+        enabled: yes
+
+
+=======================================
+
+
+provider "aws" {
+  region = "us-east-1"
+}
+
+resource "aws_instance" "GopiEC2" {
+  ami           = "ami-0abcd1234abcd1234"
+  instance_type = "r5.2xlarge"
+
+  tags = {
+    Name        = "GopiServer"
+    Environment = "Training"
+    Owner       = "PathnexStudent"
+  }
+}
+
+
+=========================================
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: Gopi-deployment
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: pathnex-app
+  template:
+    metadata:
+      labels:
+        app: pathnex-app
+    spec:
+      containers:
+        - name: app
+          image: nginx
+          ports:
+            - containerPort: 80
+
+=====================================
+
+
+pipeline {
+    agent any
+    tools {
+        maven 'Maven-3.8.1'
+        jdk 'JDK-17'
+    }
+    stages {
+        stage('Checkout') {
+            steps {
+                git url: 'https://github.com/Pathnex/sample-java-app.git'
+            }
+        }
+        stage('Compile') {
+            steps {
+                sh 'mvn clean compile'
+            }
+        }
+        stage('Test') {
+            steps {
+                sh 'mvn test'
+            }
+        }
+        stage('Package') {
+            steps {
+                sh 'mvn package'
+            }
+        }
+    }
+}
 
 
 
-
-              PRODUCTION ISSUE
-                     │
-                     ▼
-              Is server alive?
-                  uptime
-                     │
-        ┌────────────┼─────────────┐
-        ▼            ▼             ▼
-       CPU         Memory         Disk
-       top         free -h        df -h
-        │            │             │
-        └────────────┼─────────────┘
-                     ▼
-                  Process
-                  ps aux
-                     │
-                     ▼
-                  Service
-               systemctl
-                     │
-                     ▼
-                   Logs
-                journalctl
-                tail / grep
-                     │
-                     ▼
-                   Port
-                 ss -lntp
-                     │
-                     ▼
-                Local request
-                    curl
-                     │
-                     ▼
-                DNS / Network
-              dig / nc / ping
-                     │
-                     ▼
-                Dependency
-            DB / Redis / API etc.
-
-
-
-
-  ==========================================================
-
-
-
-Server
-  ↓
-hostname / uptime
-  ↓
-CPU
-top
-  ↓
-Memory
-free -h
-  ↓
-Disk
-df -h
-  ↓
-Process
-ps aux
-  ↓
-Service
-systemctl
-  ↓
-Logs
-journalctl / tail / grep
-  ↓
-Port
-ss -lntp
-  ↓
-Application
-curl
-  ↓
-DNS
-dig / nslookup
-  ↓
-Dependency
-nc -zv
-
-
------------------------------------------------------------------
-
-hostname
-uptime
-
-top
-free -h
-df -h
-du -sh
-
-ps aux
-pgrep -af
-kill
-
-systemctl status
-journalctl -u
-
-tail -f
-grep
-find
-
-ip addr
-ip route
-ss -lntp
-
-curl -v
-dig
-nslookup
-nc -zv
-
-ls -lah
-chmod
-chown
-
-ssh
-scp
-
-docker ps
-docker logs
-docker inspect
-docker exec
-
-kubectl get
-kubectl describe
-kubectl logs
-kubectl exec
 ===================================
 
-     COMMNADS
 
-=================================
 
-Category  Command   Usage / Example     What it is used for
-System Info    hostname  hostname  Show server hostname
-     hostname -I    hostname -I    Show server IP addresses
-     uname -a  uname -a  Kernel and system information
-     cat /etc/os-release cat /etc/os-release Check Linux distribution/version
-     uptime    uptime    Server uptime and load average
-     date date Current system date/time
-     timedatectl    timedatectl    Timezone and time synchronization
-     whoami    whoami    Current logged-in user
-     id   id   UID, GID, and groups
-     nproc     nproc     Number of CPU cores
-     lscpu     lscpu     Detailed CPU information
-Navigation     pwd  pwd  Show current directory
-     ls   ls   List files
-     ls -l     ls -l     Detailed file listing
-     ls -lah   ls -lah   Detailed + hidden + human-readable
-     cd   cd /var/log    Change directory
-     cd ..     cd ..     Go one directory back
-     cd ~ cd ~ Go to home directory
-Files & Directories touch     touch test.txt Create empty file
-     mkdir     mkdir app Create directory
-     mkdir -p  mkdir -p /opt/app/logs   Create nested directories
-     cp   cp file.txt backup.txt   Copy file
-     cp -r     cp -r app/ backup/  Copy directory
-     mv   mv old.txt new.txt  Move or rename file
-     rm   rm file.txt    Delete file
-     rm -r     rm -r folder/  Delete directory
-     rm -rf    rm -rf folder/ Force recursive delete; use carefully
-View Files     cat  cat config.yaml     Display small file
-     less less application.log     Read large file page by page
-     more more file.txt  Basic paginated viewing
-     head head -20 file.log   Show first lines
-     tail tail -100 app.log   Show last lines
-     tail -f   tail -f app.log     Follow live logs
-Search Content grep grep "ERROR" app.log     Search text in file
-     grep -i   grep -i "error" app.log  Case-insensitive search
-     grep -n   grep -n "ERROR" app.log  Show matching line numbers
-     grep -R   grep -R "password" /etc/ Search recursively
-     grep -E   grep -E "ERROR|WARN" app.log  Multiple patterns
-Find Files     find find / -name "app.log"   Find file by name
-     find -type f   find /var -type f   Find files only
-     find -type d   find /opt -type d   Find directories
-     find -size     find /var -type f -size +1G   Find large files
-     find -mtime    find /var/log -mtime -1  Recently modified files
-Disk Usage     df -h     df -h     Filesystem disk usage
-     du -sh    du -sh /var/log     Size of directory
-     du -sh *  du -sh *  Size of items in current directory
-     du -ah    du -ah /var/log     File and directory sizes
-     lsblk     lsblk     Block devices/disks
-     mount     mount     Mounted filesystems
-     blkid     blkid     Filesystem UUID/type
-Memory    free -h   free -h   RAM and swap usage
-     vmstat    vmstat 2  CPU/memory/process statistics
-     top  top  Live process/resource usage
-     ps aux --sort=-%mem ps aux --sort=-%mem | head    Top memory-consuming processes
-CPU  top  top  Live CPU usage
-     ps aux --sort=-%cpu ps aux --sort=-%cpu | head    Top CPU-consuming processes
-     mpstat    mpstat -P ALL 1     Per-CPU usage if installed
-     uptime    uptime    System load averages
-Processes ps aux    ps aux    Show all running processes
-     ps -ef    ps -ef    Alternative process listing
-     pgrep     pgrep nginx    Find PID by process name
-     pgrep -af pgrep -af java PID + full command
-     kill kill 1234 Gracefully stop process
-     kill -9   kill -9 1234   Force kill process
-     pkill     pkill nginx    Kill by process name
-Services / systemd  systemctl status    systemctl status nginx   Check service status
-     systemctl start     sudo systemctl start nginx    Start service
-     systemctl stop sudo systemctl stop nginx     Stop service
-     systemctl restart   sudo systemctl restart nginx  Restart service
-     systemctl reload    sudo systemctl reload nginx   Reload config
-     systemctl enable    sudo systemctl enable nginx   Start service on boot
-     systemctl disable   sudo systemctl disable nginx  Disable startup
-     systemctl list-units     systemctl list-units --type=service     List services
-Logs / Journald     journalctl     journalctl     View system logs
-     journalctl -u  journalctl -u nginx Logs for a service
-     journalctl -f  journalctl -f  Follow logs live
-     journalctl -n  journalctl -u nginx -n 100    Last N log lines
-     journalctl --since  journalctl --since "1 hour ago"    Logs for a time period
-Networking     ip addr   ip addr   Network interfaces/IPs
-     ip route  ip route  Routing table
-     ip link   ip link   Interface status
-     ss -lntp  ss -lntp  Listening TCP ports
-     ss -lnup  ss -lnup  Listening UDP ports
-     ss -ant   ss -ant   TCP connections
-     ping ping 8.8.8.8   Test reachability
-     traceroute     traceroute google.com    Trace network path
-     curl curl http://localhost:8080    Test HTTP/API
-     curl -I   curl -I https://example.com   HTTP headers
-     curl -v   curl -v http://localhost:8080 Verbose HTTP troubleshooting
-     wget wget https://example.com/file Download file
-DNS  nslookup  nslookup google.com DNS lookup
-     dig  dig google.com Detailed DNS query
-     dig +short     dig +short google.com    Short DNS answer
-     getent hosts   getent hosts db.internal Resolve hostname via system resolver
-Port Testing   nc   nc -zv db.internal 5432  Test TCP port connectivity
-     telnet    telnet host 443     Basic port testing if available
-Users     who  who  Logged-in users
-     w    w    Logged-in users + activity
-     last last Login history
-     id username    id appuser     User/group information
-     useradd   sudo useradd devops Create user
-     usermod   sudo usermod -aG docker user  Add user to group
-     passwd    sudo passwd user    Change password
-Permissions    ls -l     ls -l file.txt Check ownership/permissions
-     chmod     chmod 755 script.sh Change permissions
-     chown     sudo chown app:app file  Change owner/group
-     chgrp     chgrp devops file.txt    Change group
-SSH  ssh  ssh user@server     Connect to remote server
-     ssh -i    ssh -i key.pem ubuntu@server  SSH with private key
-     scp  scp file user@server:/tmp/    Copy file over SSH
-     scp -r    scp -r folder user@server:/tmp/    Copy directory
-     ssh-keygen     ssh-keygen -t ed25519    Create SSH key
-     ssh-copy-id    ssh-copy-id user@server  Install public key
-Archive / Compression    tar -cvf  tar -cvf logs.tar logs/  Create tar archive
-     tar -czvf tar -czvf logs.tar.gz logs/   Create compressed tar
-     tar -xzvf tar -xzvf logs.tar.gz    Extract tar.gz
-     gzip gzip app.log   Compress file
-     gunzip    gunzip app.log.gz   Decompress
-     zip  zip archive.zip file     Create zip
-     unzip     unzip archive.zip   Extract zip
-Text Processing     awk  awk '{print $1}' file    Extract columns
-     sed  sed 's/dev/prod/g' file  Search/replace text
-     cut  cut -d: -f1 /etc/passwd  Extract fields
-     sort sort file.txt  Sort output
-     uniq uniq file.txt  Remove adjacent duplicates
-     uniq -c   sort file | uniq -c Count duplicate values
-     wc -l     wc -l file.txt Count lines
-Pipes & Redirection `    `    ps aux | grep java
-     >    echo hello > file.txt    Overwrite file
-     >>   echo hello >> file.txt   Append to file
-     2>   command 2> errors.log    Redirect stderr
-     2>/dev/null    find / -name x 2>/dev/null    Hide errors
-     tee  command | tee output.log Display + save output
-Environment Variables    env  env  Show environment variables
-     printenv  printenv PATH  Print variable
-     echo $VAR echo $PATH     Display variable
-     export    export ENV=prod     Set variable for shell
-Package Management - Ubuntu/Debian apt update     sudo apt update     Refresh package metadata
-     apt upgrade    sudo apt upgrade    Upgrade packages
-     apt install    sudo apt install curl    Install package
-     apt remove     sudo apt remove nginx    Remove package
-Package Management - RHEL/AlmaLinux     dnf install    sudo dnf install curl    Install package
-     dnf update     sudo dnf update     Update packages
-     dnf remove     sudo dnf remove nginx    Remove package
-     rpm -qa   rpm -qa   List RPM packages
-History   history   history   Show previous commands
-     history | grep history | grep docker    Search command history
-     Ctrl+R    Press Ctrl+R   Interactive history search
-Disk / Open Files   lsof lsof Show open files
-     lsof -i   lsof -i :8080  Find process using port
-     fuser     fuser 8080/tcp Find PID using port
-Performance    iostat    iostat -xz 1   Disk I/O performance
-     vmstat    vmstat 1  CPU/memory/process stats
-     sar  sar -u 1 5     Historical/system performance
-     dmesg     dmesg | tail   Kernel messages
-Docker    docker ps docker ps Running containers
-     docker ps -a   docker ps -a   All containers
-     docker logs    docker logs backend Container logs
-     docker logs -f docker logs -f backend   Follow logs
-     docker inspect docker inspect backend   Detailed container info
-     docker exec    docker exec -it backend sh    Enter container
-     docker stats   docker stats   CPU/memory of containers
-     docker top     docker top backend  Processes in container
-Kubernetes     kubectl get pods    kubectl get pods -A List pods
-     kubectl get nodes   kubectl get nodes   Cluster nodes
-     kubectl get svc     kubectl get svc -A  Services
-     kubectl describe    kubectl describe pod pod1     Detailed resource info
-     kubectl logs   kubectl logs pod1   Pod logs
-     kubectl logs -f     kubectl logs -f pod1     Follow logs
-     kubectl exec   kubectl exec -it pod1 -- sh   Enter pod
-     kubectl top    kubectl top pods    CPU/memory usage
-     kubectl get events  kubectl get events --sort-by=.metadata.creationTimestamp    Cluster events
+
+stages:
+  - build
+  - test
+  - package
+
+maven-build:
+  stage: build
+  image: maven:3.8.1-jdk-17
+  script:
+    - git clone https://github.com/Pathnex/sample-java-app.git
+    - cd sample-java-app
+    - mvn clean compile
+
+maven-test:
+  stage: test
+  image: maven:3.8.1-jdk-17
+  script:
+    - cd sample-java-app
+    - mvn test
+
+maven-package:
+  stage: package
+  image: maven:3.8.1-jdk-17
+  script:
+    - cd sample-java-app
+    - mvn package

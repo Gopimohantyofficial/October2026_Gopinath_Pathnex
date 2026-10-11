@@ -97,7 +97,7 @@ deploy:
     - helm install pathnex-nginx stable/nginx-ingress
 
 
-=======================================
+=======================================-=
 
 
 # EXPOSE & Port Mapping

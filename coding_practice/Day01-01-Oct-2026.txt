@@ -1,0 +1,77 @@
+---
+- name: Install Nginx on Gopinath server
+  hosts: all
+  become: yes
+
+  tasks:
+    - name: Install nginx
+      yum:
+        name: nginx
+        state: present
+
+
+==================================
+
+provider "aws" {
+  region = "us-east-1"
+}
+
+resource "aws_instance" "GopiEC2" {
+  ami           = "ami-0abcd1234abcd1234"
+  instance_type = "c5.xlarge"
+
+  tags = {
+    Name = "GopiEC2"
+  }
+}
+
+==================================
+
+apiVersion: v1
+kind: Pod
+metadata:
+  name: ngnix-pod
+spec:
+  containers:
+    - name: web
+      image: nginx:latest
+      ports:
+        - containerPort: 80
+
+
+==================================
+
+#!/bin/bash
+echo "Date: $(date)"
+echo "Hostname: $(hostname)"
+
+
+==================================
+
+pipeline {
+    agent any
+    stages {
+        stage('Checkout') {
+            steps {
+                git branch: 'main', url: 'https://github.com/Pathnex/sample-java-app.git'
+            }
+        }
+        stage('List Files') {
+            steps {
+                sh 'ls -la'
+            }
+        }
+    }
+}
+
+==================================
+
+stages:
+  - checkout
+
+git-checkout:
+  stage: checkout
+  script:
+    - git clone https://github.com/Pathnex/sample-java-app.git
+    - cd sample-java-app
+    - ls -la

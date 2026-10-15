@@ -1,4 +1,4 @@
-- name: Install Helm
+-- name: Install Helm
   hosts: all
   become: yes
   tasks:
@@ -100,7 +100,10 @@ deploy:
 =======================================-=
 
 
-# EXPOSE & Port Mapping
 FROM nginx
 EXPOSE 80
 docker run -d -p 8080:80 nginx
+
+
+
+

@@ -14,7 +14,7 @@ leared about the kubernetes pod afiinity antifaffinity node replicaset autoscale
 
 Tomorrow's Task
 
-1-2 hour coding
+1-2 hour codings
 communication
 Preparing for the interview (Virtual)
 
